@@ -277,6 +277,8 @@ public class AFN {
         }
         
         public List get_QLinha(){
+            
+            //Coloca em "elementos" todos os estados do XML que representa o AFN
             ConjuntoEstados elementos = this.getEstados();
             ArrayList<String> nomeEstados = new ArrayList<String>();
             for (Iterator iter = elementos.getElementos().iterator(); iter.hasNext();) {
@@ -319,19 +321,21 @@ public class AFN {
         public List get_FLinha(List qLinha){
             ArrayList<String> fLinha = new ArrayList<String>();
             
-            ConjuntoEstados elementos = this.getEstadosFinais();
+            //Coloca em "elementosFinais" todos os estados finais do XML que representa o AFN
+            ConjuntoEstados elementosFinais = this.getEstadosFinais();
             ArrayList<String> nomeEstados = new ArrayList<String>();
-            for (Iterator iter = elementos.getElementos().iterator(); iter.hasNext();) {
+            for (Iterator iter = elementosFinais.getElementos().iterator(); iter.hasNext();) {
                 Estado estado = (Estado) iter.next();
                 nomeEstados.add(estado.getNome());
             }
             
             String atual="";            
-                                
             for(int i=0; i < qLinha.size(); i++){
                 atual = qLinha.get(i).toString();
-                if(atual.contains(nomeEstados.get(0)))
+                for(int j =0; j < nomeEstados.size(); j++){
+                    if(atual.contains(nomeEstados.get(j)))
                     fLinha.add(atual);
+                }
             }
             return fLinha;
         }
