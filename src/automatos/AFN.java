@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -268,15 +269,36 @@ public class AFN {
 	 * @return retorna o AFD equivalente
 	 */
         public AFD convertToAFD(){
-            List qLinha = get_QLinha();
-            System.out.println("\nQ' = "+qLinha);
-            List fLinha = get_FLinha(qLinha);
-            System.out.println("\nF' = "+fLinha);
+            //List qLinha = get_QLinha();
+            ConjuntoEstados qLinha = get_QLinha();
+            //List fLinha = get_FLinha(qLinha);
+            ConjuntoEstados fLinha = get_FLinha(qLinha);
+            
+            //Impressao dos estados QLinha e FLinha
+            System.out.println("\nQLinha:");
+            for(Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();){
+                System.out.println(iter.next().toString());
+            }
+            
+            System.out.println("\nFLinha:");
+            for(Iterator iter = fLinha.getElementos().iterator(); iter.hasNext();){
+                System.out.println(iter.next().toString());
+            }
+            //FIM Impressao dos estados QLinha e FLinha
+            
+            AFD afd = new AFD();
+                       
+            afd.setSimbolos(simbolos);
+            afd.setEstados(qLinha);
+            afd.setEstadosFinais(fLinha);
+            afd.setFuncaoPrograma(new ConjuntoTransicaoD());
+            afd.setEstadoInicial(estadoInicial);
+            System.out.println("\nAFD:"+ afd);
             
             return null;
         }
-        
-        public List get_QLinha(){
+
+        private ConjuntoEstados get_QLinha(){
             
             //Coloca em "elementos" todos os estados do XML que representa o AFN
             ConjuntoEstados elementos = this.getEstados();
@@ -315,11 +337,68 @@ public class AFN {
                     return sizeComp;				
                 }
             });
-            return allCombList;
+            
+            ConjuntoEstados qLinha = new ConjuntoEstados();
+            for(int i=0; i< allCombList.size(); i++){
+                String nome = allCombList.get(i).toString().replaceAll("[\\[]", "").replaceAll("[\\]]", "");
+                qLinha.inclui(new Estado(nome));
+            }                
+            
+            return qLinha;
+            
         }
         
-        public List get_FLinha(List qLinha){
-            ArrayList<String> fLinha = new ArrayList<String>();
+//        private List get_QLinha(){
+//            
+//            //Coloca em "elementos" todos os estados do XML que representa o AFN
+//            ConjuntoEstados elementos = this.getEstados();
+//            ArrayList<String> nomeEstados = new ArrayList<String>();
+//            for (Iterator iter = elementos.getElementos().iterator(); iter.hasNext();) {
+//                Estado estado = (Estado) iter.next();
+//                nomeEstados.add(estado.getNome());
+//            }
+//            
+//            //aqui pode ser qualquer objeto que implemente Comparable
+//            List<SortedSet<Comparable>> allCombList = new ArrayList<SortedSet<Comparable>>(); // Lista que tera toda as combinacoes para Q'
+//            for (String nEstados : nomeEstados) {
+//                allCombList.add(new TreeSet<Comparable>(Arrays.asList(nEstados))); //insiro a combinação "1 a 1" de cada item
+//            }
+//            for (int nivel = 1; nivel < nomeEstados.size(); nivel++) { 
+//                List<SortedSet<Comparable>> estadosAntes = new ArrayList<SortedSet<Comparable>>(allCombList); //crio uma cópia para poder não iterar sobre o que já foi
+//                for (Set<Comparable> antes : estadosAntes) {
+//                    SortedSet<Comparable> novo = new TreeSet<Comparable>(antes); //para manter ordenado os objetos dentro do set
+//                    novo.add(nomeEstados.get(nivel));
+//                    if (!allCombList.contains(novo)) { //testo para ver se não está repetido
+//                            allCombList.add(novo);
+//                    }
+//                }
+//            }
+//            Collections.sort(allCombList, new Comparator<SortedSet<Comparable>>() { //aqui só para organizar a saída de modo "bonitinho"
+//                @Override
+//                public int compare(SortedSet<Comparable> o1, SortedSet<Comparable> o2) {
+//                    int sizeComp = o1.size() - o2.size();
+//                    if (sizeComp == 0) {
+//                        Iterator<Comparable> o1iIterator = o1.iterator();
+//                        Iterator<Comparable> o2iIterator = o2.iterator();
+//                        while (sizeComp == 0 && o1iIterator.hasNext() ) {
+//                                sizeComp = o1iIterator.next().compareTo(o2iIterator.next());
+//                        }
+//                    }
+//                    return sizeComp;				
+//                }
+//            });
+//            
+//            List t = new ArrayList();
+//            for(int i=0; i< allCombList.size(); i++){
+//                String nome = allCombList.get(i).toString().replaceAll("[\\[]", "<").replaceAll("[\\]]", ">");
+//                t.add(nome);
+//            }                
+//            
+//            return t;
+//        }
+        
+        private ConjuntoEstados get_FLinha(ConjuntoEstados qLinha){
+            Set<String> combEstadosFinais = new HashSet<String>();
             
             //Coloca em "elementosFinais" todos os estados finais do XML que representa o AFN
             ConjuntoEstados elementosFinais = this.getEstadosFinais();
@@ -328,17 +407,49 @@ public class AFN {
                 Estado estado = (Estado) iter.next();
                 nomeEstados.add(estado.getNome());
             }
+            //nomeEstados.add("q2");
+            //nomeEstados.add("q3");
             
-            String atual="";            
-            for(int i=0; i < qLinha.size(); i++){
-                atual = qLinha.get(i).toString();
-                for(int j =0; j < nomeEstados.size(); j++){
-                    if(atual.contains(nomeEstados.get(j)))
-                    fLinha.add(atual);
+            String atual="";
+            for (Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();) {
+                atual = iter.next().toString();
+                for(int i=0; i < nomeEstados.size(); i++){
+                    if(atual.contains(nomeEstados.get(i)))
+                        combEstadosFinais.add(atual);
                 }
             }
+            
+            ConjuntoEstados fLinha = new ConjuntoEstados();
+            for (Iterator iter = combEstadosFinais.iterator(); iter.hasNext();)
+                fLinha.inclui(new Estado(iter.next().toString()));
+            
             return fLinha;
         }
+        
+//        private List get_FLinha(List qLinha){
+//            Set<String> fLinha = new HashSet<String>();
+//            
+//            //Coloca em "elementosFinais" todos os estados finais do XML que representa o AFN
+//            ConjuntoEstados elementosFinais = this.getEstadosFinais();
+//            ArrayList<String> nomeEstados = new ArrayList<String>();
+//            for (Iterator iter = elementosFinais.getElementos().iterator(); iter.hasNext();) {
+//                Estado estado = (Estado) iter.next();
+//                nomeEstados.add(estado.getNome());
+//            }
+//            nomeEstados.add("q2");
+//            nomeEstados.add("q3");
+//            
+//            String atual="";
+//            for(int i=0; i < qLinha.size(); i++){
+//                atual = qLinha.get(i).toString();//.replaceAll("[\\[]", "").replaceAll("[\\]]", "");
+//                for(int j =0; j < nomeEstados.size(); j++){
+//                    //System.err.println(atual + "     =     "+ nomeEstados.get(j));
+//                    if(atual.contains(nomeEstados.get(j)))
+//                        fLinha.add(atual);
+//                }
+//            }
+//            return new ArrayList(fLinha);
+//        }
         
 
 	/*
