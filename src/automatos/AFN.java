@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -287,17 +289,46 @@ public class AFN {
             //FIM Impressao dos estados QLinha e FLinha
             
             AFD afd = new AFD();
-                       
+            
+            ConjuntoTransicaoD conjTransD = getConjuntoTransicaoD(qLinha);
+            
+            Map<String, String> hash  = new HashMap<String, String>();
+            ArrayList<Estado> t = new ArrayList<Estado>(qLinha.getElementos());
+            for(int i=0; i < t.size();i++){
+                hash.put(t.get(i).getNome(), "q".concat(String.valueOf(i+1)));
+            }
+            
+            ArrayList<Estado> novoNomeQLinha = new ArrayList<Estado>(qLinha.getElementos());
+            for(int i = 0; i< novoNomeQLinha.size(); i++)
+                novoNomeQLinha.get(i).setNome(hash.get(novoNomeQLinha.get(i).getNome()));
+            
+            
+            ArrayList<Estado> novoNomeFLinha = new ArrayList<Estado>(fLinha.getElementos());
+            for(int j=0;j<novoNomeFLinha.size();j++)
+                novoNomeFLinha.get(j).setNome(hash.get(novoNomeFLinha.get(j).getNome()));
+                      
+            
+            ArrayList<TransicaoD> novoNomeTransicaoD = new ArrayList<TransicaoD>(conjTransD.getElementos());
+            for(int k=0; k< novoNomeTransicaoD.size(); k++){
+                //System.out.println("----- " +novoNomeTransicaoD.get(k).getOrigem().getNome());
+                //System.out.println("+++++ " +novoNomeTransicaoD.get(k).getDestino().getNome());
+                novoNomeTransicaoD.get(k).setOrigem(new Estado(hash.get(novoNomeTransicaoD.get(k).getOrigem().getNome())));
+                //novoNomeTransicaoD.get(k).setDestino(new Estado(hash.get(novoNomeTransicaoD.get(k).getDestino().getNome().replaceAll(",", ", "))));
+            }
+            
+            
             afd.setSimbolos(simbolos);
             afd.setEstados(qLinha);
             afd.setEstadosFinais(fLinha);
-            afd.setFuncaoPrograma(new ConjuntoTransicaoD());
+            afd.setFuncaoPrograma(conjTransD);
             afd.setEstadoInicial(estadoInicial);
+            
             System.out.println("\nAFD:"+ afd);
             
             return null;
         }
 
+        
         private ConjuntoEstados get_QLinha(){
             
             //Coloca em "elementos" todos os estados do XML que representa o AFN
@@ -347,55 +378,7 @@ public class AFN {
             return qLinha;
             
         }
-        
-//        private List get_QLinha(){
-//            
-//            //Coloca em "elementos" todos os estados do XML que representa o AFN
-//            ConjuntoEstados elementos = this.getEstados();
-//            ArrayList<String> nomeEstados = new ArrayList<String>();
-//            for (Iterator iter = elementos.getElementos().iterator(); iter.hasNext();) {
-//                Estado estado = (Estado) iter.next();
-//                nomeEstados.add(estado.getNome());
-//            }
-//            
-//            //aqui pode ser qualquer objeto que implemente Comparable
-//            List<SortedSet<Comparable>> allCombList = new ArrayList<SortedSet<Comparable>>(); // Lista que tera toda as combinacoes para Q'
-//            for (String nEstados : nomeEstados) {
-//                allCombList.add(new TreeSet<Comparable>(Arrays.asList(nEstados))); //insiro a combinação "1 a 1" de cada item
-//            }
-//            for (int nivel = 1; nivel < nomeEstados.size(); nivel++) { 
-//                List<SortedSet<Comparable>> estadosAntes = new ArrayList<SortedSet<Comparable>>(allCombList); //crio uma cópia para poder não iterar sobre o que já foi
-//                for (Set<Comparable> antes : estadosAntes) {
-//                    SortedSet<Comparable> novo = new TreeSet<Comparable>(antes); //para manter ordenado os objetos dentro do set
-//                    novo.add(nomeEstados.get(nivel));
-//                    if (!allCombList.contains(novo)) { //testo para ver se não está repetido
-//                            allCombList.add(novo);
-//                    }
-//                }
-//            }
-//            Collections.sort(allCombList, new Comparator<SortedSet<Comparable>>() { //aqui só para organizar a saída de modo "bonitinho"
-//                @Override
-//                public int compare(SortedSet<Comparable> o1, SortedSet<Comparable> o2) {
-//                    int sizeComp = o1.size() - o2.size();
-//                    if (sizeComp == 0) {
-//                        Iterator<Comparable> o1iIterator = o1.iterator();
-//                        Iterator<Comparable> o2iIterator = o2.iterator();
-//                        while (sizeComp == 0 && o1iIterator.hasNext() ) {
-//                                sizeComp = o1iIterator.next().compareTo(o2iIterator.next());
-//                        }
-//                    }
-//                    return sizeComp;				
-//                }
-//            });
-//            
-//            List t = new ArrayList();
-//            for(int i=0; i< allCombList.size(); i++){
-//                String nome = allCombList.get(i).toString().replaceAll("[\\[]", "<").replaceAll("[\\]]", ">");
-//                t.add(nome);
-//            }                
-//            
-//            return t;
-//        }
+                
         
         private ConjuntoEstados get_FLinha(ConjuntoEstados qLinha){
             Set<String> combEstadosFinais = new HashSet<String>();
@@ -418,40 +401,45 @@ public class AFN {
                         combEstadosFinais.add(atual);
                 }
             }
-            
+                        
             ConjuntoEstados fLinha = new ConjuntoEstados();
             for (Iterator iter = combEstadosFinais.iterator(); iter.hasNext();)
                 fLinha.inclui(new Estado(iter.next().toString()));
             
             return fLinha;
         }
+                
         
-//        private List get_FLinha(List qLinha){
-//            Set<String> fLinha = new HashSet<String>();
-//            
-//            //Coloca em "elementosFinais" todos os estados finais do XML que representa o AFN
-//            ConjuntoEstados elementosFinais = this.getEstadosFinais();
-//            ArrayList<String> nomeEstados = new ArrayList<String>();
-//            for (Iterator iter = elementosFinais.getElementos().iterator(); iter.hasNext();) {
-//                Estado estado = (Estado) iter.next();
-//                nomeEstados.add(estado.getNome());
-//            }
-//            nomeEstados.add("q2");
-//            nomeEstados.add("q3");
-//            
-//            String atual="";
-//            for(int i=0; i < qLinha.size(); i++){
-//                atual = qLinha.get(i).toString();//.replaceAll("[\\[]", "").replaceAll("[\\]]", "");
-//                for(int j =0; j < nomeEstados.size(); j++){
-//                    //System.err.println(atual + "     =     "+ nomeEstados.get(j));
-//                    if(atual.contains(nomeEstados.get(j)))
-//                        fLinha.add(atual);
-//                }
-//            }
-//            return new ArrayList(fLinha);
-//        }
+        private ConjuntoTransicaoD getConjuntoTransicaoD(ConjuntoEstados qLinha){
+            ConjuntoTransicaoD conjTransD = new ConjuntoTransicaoD();
+            
+            String nomeEstadoQLinha = "";
+            
+            for(Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();){
+                ConjuntoEstados conjEstado = new ConjuntoEstados();
+                nomeEstadoQLinha = iter.next().toString();
+                String[] nomeEstado = nomeEstadoQLinha.split(", ");
+                for(int i=0; i < nomeEstado.length; i++){
+                    conjEstado.inclui(new Estado(nomeEstado[i]));
+                }
+                for(Iterator iterSimbolo = simbolos.iterator(); iterSimbolo.hasNext();){
+                    TransicaoD transicaoD = new TransicaoD();
+                    String simboloAtual =  iterSimbolo.next().toString();
+                    ConjuntoEstados retornoPe = this.pe(conjEstado, simboloAtual);
+                                        
+                    transicaoD.setOrigem(new Estado(nomeEstadoQLinha));
+                    transicaoD.setSimbolo(new Simbolo(simboloAtual.charAt(0)));
+                    transicaoD.setDestino(new Estado(retornoPe.toString().replaceAll("\\{", "").replaceAll("\\}", "")));
+                    
+                    if(!retornoPe.toString().replaceAll("\\{", "").replaceAll("\\}", "").equals(""))
+                        conjTransD.inclui(transicaoD);
+                    
+                }
+            }
+                        
+            return conjTransD;
+        }
         
-
 	/*
 	 * Cria arquivo XML do AFN com nome de filename.xml
 	 * @param filename Nome do arquivo XML que será criado sem a extensão.

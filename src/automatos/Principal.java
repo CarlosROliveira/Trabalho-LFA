@@ -53,15 +53,7 @@ public class Principal {
             ce.inclui(a.getEstadoInicial());
             System.out.println("\nPe("+a.getEstadoInicial()+", 'ab') = " +a.pe(ce, "ab"));
             System.out.println("Estados: "+ a.getEstados());
-
-//            ConjuntoEstados elementos = a.getEstados();
-//            ArrayList<String> nomeEstados = new ArrayList<String>();
-//            for (Iterator iter = elementos.getElementos().iterator(); iter.hasNext();) {
-//                Estado estado = (Estado) iter.next();
-//                nomeEstados.add(estado.getNome());
-//             }
-            
-            //System.out.println("\narray "+ nomeEstados);
+          
             a.convertToAFD();
                
         } catch (Exception e){
