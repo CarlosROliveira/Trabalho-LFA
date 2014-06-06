@@ -307,13 +307,12 @@ public class AFN {
             for(int j=0;j<novoNomeFLinha.size();j++)
                 novoNomeFLinha.get(j).setNome(hash.get(novoNomeFLinha.get(j).getNome()));
                       
-            
             ArrayList<TransicaoD> novoNomeTransicaoD = new ArrayList<TransicaoD>(conjTransD.getElementos());
             for(int k=0; k< novoNomeTransicaoD.size(); k++){
                 //System.out.println("----- " +novoNomeTransicaoD.get(k).getOrigem().getNome());
                 //System.out.println("+++++ " +novoNomeTransicaoD.get(k).getDestino().getNome());
                 novoNomeTransicaoD.get(k).setOrigem(new Estado(hash.get(novoNomeTransicaoD.get(k).getOrigem().getNome())));
-                //novoNomeTransicaoD.get(k).setDestino(new Estado(hash.get(novoNomeTransicaoD.get(k).getDestino().getNome().replaceAll(",", ", "))));
+                novoNomeTransicaoD.get(k).setDestino(new Estado(hash.get(novoNomeTransicaoD.get(k).getDestino().getNome())));
             }
             
             
@@ -401,8 +400,8 @@ public class AFN {
                         combEstadosFinais.add(atual);
                 }
             }
-                        
-            ConjuntoEstados fLinha = new ConjuntoEstados();
+                                             
+            ConjuntoEstados fLinha = new ConjuntoEstados();;
             for (Iterator iter = combEstadosFinais.iterator(); iter.hasNext();)
                 fLinha.inclui(new Estado(iter.next().toString()));
             
@@ -425,13 +424,23 @@ public class AFN {
                 for(Iterator iterSimbolo = simbolos.iterator(); iterSimbolo.hasNext();){
                     TransicaoD transicaoD = new TransicaoD();
                     String simboloAtual =  iterSimbolo.next().toString();
-                    ConjuntoEstados retornoPe = this.pe(conjEstado, simboloAtual);
-                                        
+                    
+                    //Variavel auxiliar que obtem o conjunto de estados da funcao PE
+                    ArrayList<Estado> retornoPe = new ArrayList<Estado>(this.pe(conjEstado, simboloAtual).getElementos());
+                    //Ordena os elementos contidos no conjunto
+                    Collections.sort(retornoPe, new Comparator<Estado>(){
+                        public int compare(Estado o1, Estado o2) {
+                            return o1.getNome().compareTo(o2.getNome());
+                        }
+                    });
+                    
+                    //Define a transicao
                     transicaoD.setOrigem(new Estado(nomeEstadoQLinha));
                     transicaoD.setSimbolo(new Simbolo(simboloAtual.charAt(0)));
-                    transicaoD.setDestino(new Estado(retornoPe.toString().replaceAll("\\{", "").replaceAll("\\}", "")));
+                    transicaoD.setDestino(new Estado(retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "")));//.replaceAll(",", ", ")));
                     
-                    if(!retornoPe.toString().replaceAll("\\{", "").replaceAll("\\}", "").equals(""))
+                    //Caso o retornoPe seja diferente de vazio, inclui no conjunto de Transacao (conjTrasD)
+                    if(!retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "").equals(""))
                         conjTransD.inclui(transicaoD);
                     
                 }
