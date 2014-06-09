@@ -399,7 +399,11 @@ public class AFN {
             return fLinha;
         }
                 
-        
+        /**
+	 * Obtem todas as transicoes a partir de Q'
+         * @param qlinha - Contem todas as combinacoes de estados possiveis para Q'
+	 * @return retorna o Conjunto de Transicoes Deterministicas
+	 */
         private ConjuntoTransicaoD getConjuntoTransicaoD(ConjuntoEstados qLinha){
             //Cria um Conjunto de Transicoes Deterministicas
             ConjuntoTransicaoD conjTransD = new ConjuntoTransicaoD();
@@ -411,7 +415,7 @@ public class AFN {
                 for(int i=0; i < nomeEstado.length; i++){
                     conjEstado.inclui(new Estado(nomeEstado[i]));
                 }
-                for(Iterator iterSimbolo = simbolos.iterator(); iterSimbolo.hasNext();){
+                for(Iterator iterSimbolo = simbolos.iterator(); iterSimbolo.hasNext();){ //Para cada simbolo
                     TransicaoD transicaoD = new TransicaoD();
                     String simboloAtual =  iterSimbolo.next().toString();
                     
