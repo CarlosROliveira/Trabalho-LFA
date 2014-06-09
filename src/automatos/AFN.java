@@ -392,7 +392,7 @@ public class AFN {
             }
             
             //Cria um Conjunto de Estados e inclui todas as possibilidades para F'
-            ConjuntoEstados fLinha = new ConjuntoEstados();;
+            ConjuntoEstados fLinha = new ConjuntoEstados();
             for (Iterator iter = combEstadosFinais.iterator(); iter.hasNext();)
                 fLinha.inclui(new Estado(iter.next().toString()));
             
