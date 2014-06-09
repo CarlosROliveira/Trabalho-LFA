@@ -48,14 +48,10 @@ public class Principal {
         AFN a = new AFN();
         try {
             a.ler("./src/automatos/AFN01.xml");
-            System.out.println(a);
-            ConjuntoEstados ce = new ConjuntoEstados();
-            ce.inclui(a.getEstadoInicial());
-            System.out.println("\nPe("+a.getEstadoInicial()+", 'ab') = " +a.pe(ce, "ab"));
-            System.out.println("Estados: "+ a.getEstados());
-          
-            a.convertToAFD();
-               
+            System.out.println("AFN:"+ a);
+                      
+            AFD afd = a.convertToAFD();
+            System.out.println("\nAFD:"+ afd);
         } catch (Exception e){
                System.out.println(e);
         }     

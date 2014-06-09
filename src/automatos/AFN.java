@@ -25,7 +25,7 @@ import org.w3c.dom.NodeList;
 /**
  * Classe para a criacao de um automato finito n�o-determin�stico
  * 
- * @author Fabio Moreira Campos, Rafael Sachetto Oliveira, Tiago Jos� Melquiades
+ * @author Fabio Moreira Campos, Rafael Sachetto Oliveira, Tiago Jos� Melquiades, Carlos Roberto, Marcus Antonio
  */
 
 public class AFN {
@@ -271,65 +271,54 @@ public class AFN {
 	 * @return retorna o AFD equivalente
 	 */
         public AFD convertToAFD(){
-            //List qLinha = get_QLinha();
+            //Contem todas as combinacoes possiveis para Q'
             ConjuntoEstados qLinha = get_QLinha();
-            //List fLinha = get_FLinha(qLinha);
+            //Contem todos os candidatos possiveis para F'
             ConjuntoEstados fLinha = get_FLinha(qLinha);
-            
-            //Impressao dos estados QLinha e FLinha
-            System.out.println("\nQLinha:");
-            for(Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();){
-                System.out.println(iter.next().toString());
-            }
-            
-            System.out.println("\nFLinha:");
-            for(Iterator iter = fLinha.getElementos().iterator(); iter.hasNext();){
-                System.out.println(iter.next().toString());
-            }
-            //FIM Impressao dos estados QLinha e FLinha
-            
-            AFD afd = new AFD();
-            
+                        
+            //Contem todas as transicoes utilizando Q'
             ConjuntoTransicaoD conjTransD = getConjuntoTransicaoD(qLinha);
-            
+
+            //Funcao de Hash responsavel por renomear os estados "compostos". Ex: <q1, q2>
             Map<String, String> hash  = new HashMap<String, String>();
             ArrayList<Estado> t = new ArrayList<Estado>(qLinha.getElementos());
             for(int i=0; i < t.size();i++){
                 hash.put(t.get(i).getNome(), "q".concat(String.valueOf(i+1)));
             }
             
+            //Obtem para os estados de Q' seu novo nome a partir da funcao de hash
             ArrayList<Estado> novoNomeQLinha = new ArrayList<Estado>(qLinha.getElementos());
             for(int i = 0; i< novoNomeQLinha.size(); i++)
                 novoNomeQLinha.get(i).setNome(hash.get(novoNomeQLinha.get(i).getNome()));
             
-            
+            //Obtem para os estados de F' seu novo nome a partir da funcao de hash
             ArrayList<Estado> novoNomeFLinha = new ArrayList<Estado>(fLinha.getElementos());
             for(int j=0;j<novoNomeFLinha.size();j++)
                 novoNomeFLinha.get(j).setNome(hash.get(novoNomeFLinha.get(j).getNome()));
-                      
+
+            //Obtem para os estados que fazem parte da Transicao seu novo nome a partir da funcao de hash
             ArrayList<TransicaoD> novoNomeTransicaoD = new ArrayList<TransicaoD>(conjTransD.getElementos());
             for(int k=0; k< novoNomeTransicaoD.size(); k++){
-                //System.out.println("----- " +novoNomeTransicaoD.get(k).getOrigem().getNome());
-                //System.out.println("+++++ " +novoNomeTransicaoD.get(k).getDestino().getNome());
                 novoNomeTransicaoD.get(k).setOrigem(new Estado(hash.get(novoNomeTransicaoD.get(k).getOrigem().getNome())));
                 novoNomeTransicaoD.get(k).setDestino(new Estado(hash.get(novoNomeTransicaoD.get(k).getDestino().getNome())));
             }
             
-            
+            //Cria o AFD e define seus parametros
+            AFD afd = new AFD();
             afd.setSimbolos(simbolos);
             afd.setEstados(qLinha);
             afd.setEstadosFinais(fLinha);
             afd.setFuncaoPrograma(conjTransD);
             afd.setEstadoInicial(estadoInicial);
-            
-            System.out.println("\nAFD:"+ afd);
-            
-            return null;
+                        
+            return afd;
         }
 
-        
+        /**
+	 * Obtem todas as combinacoes de estados possiveis para Q'
+	 * @return retorna o Conjunto de Estados Q'
+	 */
         private ConjuntoEstados get_QLinha(){
-            
             //Coloca em "elementos" todos os estados do XML que representa o AFN
             ConjuntoEstados elementos = this.getEstados();
             ArrayList<String> nomeEstados = new ArrayList<String>();
@@ -338,22 +327,22 @@ public class AFN {
                 nomeEstados.add(estado.getNome());
             }
             
-            //aqui pode ser qualquer objeto que implemente Comparable
-            List<SortedSet<Comparable>> allCombList = new ArrayList<SortedSet<Comparable>>(); // Lista que tera toda as combinacoes para Q'
+            //Lista que tera toda as combinacoes para Q'
+            List<SortedSet<Comparable>> combQLinha = new ArrayList<SortedSet<Comparable>>();
             for (String nEstados : nomeEstados) {
-                allCombList.add(new TreeSet<Comparable>(Arrays.asList(nEstados))); //insiro a combinação "1 a 1" de cada item
+                combQLinha.add(new TreeSet<Comparable>(Arrays.asList(nEstados))); //insiro a combinação "1 a 1" de cada item
             }
             for (int nivel = 1; nivel < nomeEstados.size(); nivel++) { 
-                List<SortedSet<Comparable>> estadosAntes = new ArrayList<SortedSet<Comparable>>(allCombList); //crio uma cópia para poder não iterar sobre o que já foi
+                List<SortedSet<Comparable>> estadosAntes = new ArrayList<SortedSet<Comparable>>(combQLinha); //crio uma cópia para poder não iterar sobre o que já foi
                 for (Set<Comparable> antes : estadosAntes) {
                     SortedSet<Comparable> novo = new TreeSet<Comparable>(antes); //para manter ordenado os objetos dentro do set
                     novo.add(nomeEstados.get(nivel));
-                    if (!allCombList.contains(novo)) { //testo para ver se não está repetido
-                            allCombList.add(novo);
+                    if (!combQLinha.contains(novo)) { //Caso nao esteja repetido inclui no conjunto
+                            combQLinha.add(novo);
                     }
                 }
             }
-            Collections.sort(allCombList, new Comparator<SortedSet<Comparable>>() { //aqui só para organizar a saída de modo "bonitinho"
+            Collections.sort(combQLinha, new Comparator<SortedSet<Comparable>>() { //Ordena os elementos
                 @Override
                 public int compare(SortedSet<Comparable> o1, SortedSet<Comparable> o2) {
                     int sizeComp = o1.size() - o2.size();
@@ -368,20 +357,22 @@ public class AFN {
                 }
             });
             
+            //Cria um Conjunto de Estados e inclui todas as combinacoes possiveis para Q'
             ConjuntoEstados qLinha = new ConjuntoEstados();
-            for(int i=0; i< allCombList.size(); i++){
-                String nome = allCombList.get(i).toString().replaceAll("[\\[]", "").replaceAll("[\\]]", "");
+            for(int i=0; i< combQLinha.size(); i++){
+                String nome = combQLinha.get(i).toString().replaceAll("[\\[]", "").replaceAll("[\\]]", "");
                 qLinha.inclui(new Estado(nome));
             }                
             
             return qLinha;
-            
         }
                 
-        
+        /**
+	 * Obtem todos os estados finais a partir de Q'
+         * @param qlinha - Contem todas as combinacoes de estados possiveis para Q'
+	 * @return retorna o Conjunto de Estados F'
+	 */
         private ConjuntoEstados get_FLinha(ConjuntoEstados qLinha){
-            Set<String> combEstadosFinais = new HashSet<String>();
-            
             //Coloca em "elementosFinais" todos os estados finais do XML que representa o AFN
             ConjuntoEstados elementosFinais = this.getEstadosFinais();
             ArrayList<String> nomeEstados = new ArrayList<String>();
@@ -389,18 +380,18 @@ public class AFN {
                 Estado estado = (Estado) iter.next();
                 nomeEstados.add(estado.getNome());
             }
-            //nomeEstados.add("q2");
-            //nomeEstados.add("q3");
             
+            Set<String> combEstadosFinais = new HashSet<String>();
             String atual="";
             for (Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();) {
                 atual = iter.next().toString();
                 for(int i=0; i < nomeEstados.size(); i++){
-                    if(atual.contains(nomeEstados.get(i)))
+                    if(atual.contains(nomeEstados.get(i))) // Verifica se o estados ATUAL vindo de Q' com algum estado final do AFN
                         combEstadosFinais.add(atual);
                 }
             }
-                                             
+            
+            //Cria um Conjunto de Estados e inclui todas as possibilidades para F'
             ConjuntoEstados fLinha = new ConjuntoEstados();;
             for (Iterator iter = combEstadosFinais.iterator(); iter.hasNext();)
                 fLinha.inclui(new Estado(iter.next().toString()));
@@ -410,14 +401,13 @@ public class AFN {
                 
         
         private ConjuntoTransicaoD getConjuntoTransicaoD(ConjuntoEstados qLinha){
+            //Cria um Conjunto de Transicoes Deterministicas
             ConjuntoTransicaoD conjTransD = new ConjuntoTransicaoD();
-            
             String nomeEstadoQLinha = "";
-            
             for(Iterator iter = qLinha.getElementos().iterator(); iter.hasNext();){
                 ConjuntoEstados conjEstado = new ConjuntoEstados();
                 nomeEstadoQLinha = iter.next().toString();
-                String[] nomeEstado = nomeEstadoQLinha.split(", ");
+                String[] nomeEstado = nomeEstadoQLinha.split(", "); //Quebra os estados compostos. Ex: [q1, q2] ->  [q1] [q2]
                 for(int i=0; i < nomeEstado.length; i++){
                     conjEstado.inclui(new Estado(nomeEstado[i]));
                 }
@@ -434,18 +424,16 @@ public class AFN {
                         }
                     });
                     
-                    //Define a transicao
-                    transicaoD.setOrigem(new Estado(nomeEstadoQLinha));
-                    transicaoD.setSimbolo(new Simbolo(simboloAtual.charAt(0)));
-                    transicaoD.setDestino(new Estado(retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "")));//.replaceAll(",", ", ")));
-                    
                     //Caso o retornoPe seja diferente de vazio, inclui no conjunto de Transacao (conjTrasD)
-                    if(!retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "").equals(""))
-                        conjTransD.inclui(transicaoD);
-                    
+                    if(!retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "").equals("")){
+                        //Define a transicao (origem, simbolo, destino)
+                        transicaoD.setOrigem(new Estado(nomeEstadoQLinha));
+                        transicaoD.setSimbolo(new Simbolo(simboloAtual.charAt(0)));
+                        transicaoD.setDestino(new Estado(retornoPe.toString().replaceAll("\\[", "").replaceAll("\\]", "")));
+                        conjTransD.inclui(transicaoD); //Inclui no conjunto
+                    }
                 }
             }
-                        
             return conjTransD;
         }
         
